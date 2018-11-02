@@ -45,10 +45,10 @@ function parseColors($element) {
 /*[...document.body.querySelectorAll('*')].forEach($el => {
   console.log(parseColors($el));
 });*/
+const colorRules = new Map();
+const colorsByRules = new Map();
 
 const getCSSColors = postcss.plugin('getCSSColors', (opts = {}) => {
-  const colorRules = new Map();
-
   // Work with options here
   return (root, result) => {
     root.walkRules(rule => {
@@ -64,19 +64,27 @@ const getCSSColors = postcss.plugin('getCSSColors', (opts = {}) => {
             property: decl.prop,
           });
         }
+
+        (colorList || []).forEach(color => {
+          if (!colorsByRules.has(color)) {
+            colorsByRules.set(color, []);
+          }
+
+          colorsByRules.get(color).push({
+            selector: rule.selector,
+            property: decl.prop,
+          });
+        });
       });
     });
-    console.log(colorRules);
   };
 });
 
-postcss(getCSSColors)
-  .process(document.querySelector('style').innerHTML)
-  .then(result => {
-    //const nodes = [...];
-    /*console.log(
-    result.nodes
-  )*/
-  });
-
-export default parseColors;
+export default {
+  parse: (callback) => {postcss(getCSSColors)
+    .process(document.querySelector('style').innerHTML)
+    .then((postCssResult) => {
+      callback(colorsByRules, colorRules, postCssResult);
+    });
+  }
+};
