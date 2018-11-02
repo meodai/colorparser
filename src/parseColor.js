@@ -46,29 +46,37 @@ function parseColors($element) {
   console.log(parseColors($el));
 });*/
 
-cosnt rules = {
-
-}
-
 const getCSSColors = postcss.plugin('getCSSColors', (opts = {}) => {
+  const colorRules = new Map();
+
   // Work with options here
   return (root, result) => {
-    console.log('root', root) 
     root.walkRules(rule => {
-      console.log(rule, rule.selector)
-
       rule.walkDecls(decl => {
-        console.log(decl)
-      })
+        const colorList = getCssColors(decl.value);
+        if (colorList && !colorRules.get(rule.selector)) {
+          colorRules.set(rule.selector, []);
+        }
+        if (colorList && colorRules.get(rule.selector)) {
+          colorRules.get(rule.selector).push({
+            colorList,
+            value: decl.value,
+            property: decl.prop,
+          });
+        }
+      });
     });
+    console.log(colorRules);
   };
 });
 
-postcss(getCSSColors).process(document.querySelector('style').innerHTML).then(result => {
-  //const nodes = [...];
-  /*console.log(
+postcss(getCSSColors)
+  .process(document.querySelector('style').innerHTML)
+  .then(result => {
+    //const nodes = [...];
+    /*console.log(
     result.nodes
   )*/
-})
+  });
 
 export default parseColors;
